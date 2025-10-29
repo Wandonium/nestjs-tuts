@@ -4,7 +4,6 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { join } from 'path';
 
 @Module({
   imports: [
@@ -19,10 +18,10 @@ import { join } from 'path';
         username: configService.get<string>('DB_USER'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [join(process.cwd(), 'dis', '**', '*.entity{.ts,.js}')],
+        entities: ['/src/**/*.entity{.ts,.js}'],
         synchronize: false,
         autoLoadEntities: true,
-        migrations: [join(process.cwd(), 'dist', 'migrations', '*.{ts,js}')],
+        migrations: ['/src/migrations/*.ts'],
       }),
     }),
     UsersModule,
