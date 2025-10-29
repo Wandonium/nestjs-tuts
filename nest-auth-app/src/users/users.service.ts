@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,11 +11,8 @@ export class UsersService {
     @InjectRepository(User) private readonly usersRepository: Repository<User>,
   ) {}
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const newUser = new User();
-    newUser.name = createUserDto.name;
-    newUser.email = createUserDto.email;
-    newUser.password = createUserDto.password;
-    return await this.usersRepository.save(newUser);
+    const user = this.usersRepository.create(createUserDto);
+    return await this.usersRepository.save(user);
   }
 
   async findAll(): Promise<User[]> {
@@ -23,24 +20,19 @@ export class UsersService {
   }
 
   async findOne(id: number): Promise<User | null> {
-    return this.usersRepository.findOneBy({ id });
+    return this.usersRepository.findOne({ where: { id } });
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User | null> {
     const user = await this.usersRepository.findOneBy({ id });
-    if (!user) return null;
-    user.name = updateUserDto.name ? updateUserDto.name : user?.name;
-    user.email = updateUserDto.email ? updateUserDto.email : user?.email;
-    user.password = updateUserDto.password
-      ? updateUserDto.password
-      : user?.password;
+    if (!user) throw new NotFoundException();
+    Object.assign(user, updateUserDto);
     return await this.usersRepository.save(user);
   }
 
   async remove(id: number): Promise<User | null> {
-    const user = await this.usersRepository.findOneBy({ id });
-    if (!user) return null;
-    await this.usersRepository.delete(id);
-    return user;
+    const user = await this.findOne(id);
+    if (!user) throw new NotFoundException();
+    return await this.usersRepository.remove(user);
   }
 }
