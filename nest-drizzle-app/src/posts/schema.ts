@@ -8,6 +8,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '../users/schema';
 import { relations } from 'drizzle-orm';
+import { postsToCategories } from 'src/categories/schema';
 
 export const posts = pgTable('posts', {
   id: serial('id').primaryKey(),
@@ -17,9 +18,10 @@ export const posts = pgTable('posts', {
   userId: integer('user_id').references(() => users.id),
 });
 
-export const postRelations = relations(posts, ({ one }) => ({
+export const postRelations = relations(posts, ({ one, many }) => ({
   user: one(users, {
     fields: [posts.userId],
     references: [users.id],
   }),
+  postsToCategories: many(postsToCategories),
 }));
