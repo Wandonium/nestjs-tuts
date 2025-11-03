@@ -11,7 +11,10 @@ export class CategoriesService {
   ) {}
 
   async createCategory(category: typeof schema.categories.$inferInsert) {
-    await this.database.insert(schema.categories).values(category);
+    return await this.database
+      .insert(schema.categories)
+      .values(category)
+      .returning();
   }
 
   async addToPost(

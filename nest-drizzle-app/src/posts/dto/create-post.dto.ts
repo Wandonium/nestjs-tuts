@@ -3,4 +3,5 @@ export class CreatePostDto {
   userId: number;
   published: boolean;
   timestamp: Date;
+  category?: string;
 }

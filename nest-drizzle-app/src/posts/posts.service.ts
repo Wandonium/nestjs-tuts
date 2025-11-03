@@ -3,21 +3,37 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DATABASE_CONNECTION } from 'src/database/database-connection';
 import * as schema from './schema';
 import { eq } from 'drizzle-orm';
+import { CategoriesService } from 'src/categories/categories.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly database: NodePgDatabase<typeof schema>,
+    private readonly categoriesService: CategoriesService,
   ) {}
 
-  async createPost(post: typeof schema.posts.$inferInsert) {
-    return await this.database.insert(schema.posts).values(post).returning();
+  async createPost(post: typeof schema.posts.$inferInsert, category?: string) {
+    const posts = await this.database
+      .insert(schema.posts)
+      .values(post)
+      .returning();
+    if (category) {
+      const categories = await this.categoriesService.createCategory({
+        name: category,
+      });
+      await this.categoriesService.addToPost({
+        postId: posts[0].id,
+        categoryId: categories[0].id,
+      });
+      return { posts, categories };
+    }
+    return { posts };
   }
 
   async getPosts() {
     return this.database.query.posts.findMany({
-      with: { user: true },
+      with: { user: true, postsToCategories: true },
     });
   }
 

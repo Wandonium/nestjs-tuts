@@ -8,7 +8,13 @@ export class PostsController {
 
   @Post()
   async createPost(@Body() request: CreatePostDto) {
-    return this.postsService.createPost(request);
+    return this.postsService.createPost(
+      {
+        content: request.content,
+        userId: request.userId,
+      },
+      request.category,
+    );
   }
 
   @Get()
