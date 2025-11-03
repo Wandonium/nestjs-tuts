@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { NodePgDatabase, NodePgTransaction } from 'drizzle-orm/node-postgres';
 import { DATABASE_CONNECTION } from 'src/database/database-connection';
 import * as schema from './schema';
 
@@ -10,8 +10,11 @@ export class CategoriesService {
     private readonly database: NodePgDatabase<typeof schema>,
   ) {}
 
-  async createCategory(category: typeof schema.categories.$inferInsert) {
-    return await this.database
+  async createCategory(
+    category: typeof schema.categories.$inferInsert,
+    tx?: NodePgTransaction<any, any>,
+  ) {
+    return await (tx || this.database)
       .insert(schema.categories)
       .values(category)
       .returning();
@@ -19,8 +22,11 @@ export class CategoriesService {
 
   async addToPost(
     postToCategory: typeof schema.postsToCategories.$inferInsert,
+    tx?: NodePgTransaction<any, any>,
   ) {
-    await this.database.insert(schema.postsToCategories).values(postToCategory);
+    await (tx || this.database)
+      .insert(schema.postsToCategories)
+      .values(postToCategory);
   }
 
   async getCategories() {

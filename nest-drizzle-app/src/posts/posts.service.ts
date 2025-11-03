@@ -14,21 +14,26 @@ export class PostsService {
   ) {}
 
   async createPost(post: typeof schema.posts.$inferInsert, category?: string) {
-    const posts = await this.database
-      .insert(schema.posts)
-      .values(post)
-      .returning();
-    if (category) {
-      const categories = await this.categoriesService.createCategory({
-        name: category,
-      });
-      await this.categoriesService.addToPost({
-        postId: posts[0].id,
-        categoryId: categories[0].id,
-      });
-      return { posts, categories };
-    }
-    return { posts };
+    await this.database.transaction(async (tx) => {
+      const posts = await tx.insert(schema.posts).values(post).returning();
+      if (category) {
+        const categories = await this.categoriesService.createCategory(
+          {
+            name: category,
+          },
+          tx,
+        );
+        await this.categoriesService.addToPost(
+          {
+            postId: posts[0].id,
+            categoryId: categories[0].id,
+          },
+          tx,
+        );
+        return { ...posts, ...categories };
+      }
+      return { posts };
+    });
   }
 
   async getPosts() {
