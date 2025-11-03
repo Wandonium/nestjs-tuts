@@ -4,6 +4,8 @@ import { DATABASE_CONNECTION } from 'src/database/database-connection';
 import * as schema from './schema';
 import { eq } from 'drizzle-orm';
 import { CategoriesService } from '../categories/categories.service';
+import { postsToCategories } from 'src/categories/schema';
+import { categories } from 'src/categories/schema';
 
 @Injectable()
 export class PostsService {
@@ -77,9 +79,15 @@ export class PostsService {
   }
 
   async getPost(postId: number) {
-    return this.database.query.posts.findFirst({
-      where: eq(schema.posts.id, postId),
-    });
+    // return this.database.query.posts.findFirst({
+    // where: eq(schema.posts.id, postId),
+    // });
+    return await this.database
+      .select()
+      .from(postsToCategories)
+      .leftJoin(schema.posts, eq(postsToCategories.postId, schema.posts.id))
+      .leftJoin(categories, eq(postsToCategories.categoryId, categories.id))
+      .where(eq(schema.posts.id, postId));
   }
 
   async updatePost(postId: number, post: typeof schema.posts.$inferInsert) {
