@@ -12,11 +12,15 @@ export class UsersService {
 
   async getUsers() {
     return this.database.query.users.findMany({
-      with: { posts: true },
+      with: { posts: true, profile: true },
     });
   }
 
   async createUser(user: typeof schema.users.$inferInsert) {
     await this.database.insert(schema.users).values(user);
+  }
+
+  async createProfile(profile: typeof schema.profile.$inferInsert) {
+    await this.database.insert(schema.profile).values(profile);
   }
 }
