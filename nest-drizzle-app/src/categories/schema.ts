@@ -5,7 +5,7 @@ import {
   integer,
   primaryKey,
 } from 'drizzle-orm/pg-core';
-import { posts } from 'src/posts/schema';
+import { posts } from '../posts/schema';
 import { relations } from 'drizzle-orm';
 
 export const categories = pgTable('categories', {

@@ -8,7 +8,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '../users/schema';
 import { relations } from 'drizzle-orm';
-import { postsToCategories } from 'src/categories/schema';
+import { postsToCategories } from '../categories/schema';
 
 export const posts = pgTable('posts', {
   id: serial('id').primaryKey(),
