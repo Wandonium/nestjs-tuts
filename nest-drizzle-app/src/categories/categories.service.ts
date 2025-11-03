@@ -14,6 +14,12 @@ export class CategoriesService {
     category: typeof schema.categories.$inferInsert,
     tx?: NodePgTransaction<any, any>,
   ) {
+    // return (
+    //   await (tx || this.database)
+    //     .insert(schema.categories)
+    //     .values(category)
+    //     .returning({ id: schema.categories.id })
+    // )[0];
     return await (tx || this.database)
       .insert(schema.categories)
       .values(category)
