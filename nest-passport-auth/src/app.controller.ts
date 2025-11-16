@@ -8,4 +8,10 @@ export class AppController {
   async login(@Request() req) {
     return req.user;
   }
+
+  @UseGuards(LocalAuthGuard)
+  @Post('auth/logout')
+  async logout(@Request() req) {
+    return req.logout();
+  }
 }
