@@ -9,16 +9,21 @@ export class UsersService {
       userId: 1,
       username: 'john',
       password: 'changeme',
+      refresh_token: '',
     },
     {
       userId: 2,
       username: 'maria',
       password: 'guess',
+      refresh_token: '',
     },
   ];
 
-  // eslint-disable-next-line @typescript-eslint/require-await, @typescript-eslint/no-redundant-type-constituents
-  async findOne(username: string): Promise<User | undefined> {
+  findOne(username: string) {
     return this.users.find((user) => user.username === username);
+  }
+
+  findById(userId: number) {
+    return this.users.find((usr) => usr.userId === userId);
   }
 }
