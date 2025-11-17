@@ -68,4 +68,8 @@ export class AuthService {
       refresh_token,
     };
   }
+
+  async logout(user: any) {
+    return await this.cacheManager.del(user.userId);
+  }
 }
