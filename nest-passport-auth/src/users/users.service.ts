@@ -26,4 +26,13 @@ export class UsersService {
   findById(userId: number) {
     return this.users.find((usr) => usr.userId === userId);
   }
+
+  updateUser(user: any) {
+    if (!user) throw new Error('No user data to update provided!');
+    const idx = this.users.findIndex((usr) => usr.userId === user.userId);
+    if (idx !== -1) {
+      this.users[idx] = user;
+      return this.users[idx];
+    } else throw new Error('Invalid id for user to be updated!');
+  }
 }
