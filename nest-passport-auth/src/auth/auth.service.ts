@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { compare } from 'bcryptjs';
+import { compare, hash } from 'bcryptjs';
+import type { Cache } from 'cache-manager';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Inject('CACHE_MANAGER') private cacheManager: Cache,
   ) {}
 
   async validateUser(username: string, pass: string): Promise<any> {
@@ -22,13 +24,18 @@ export class AuthService {
     return null;
   }
 
-  validateUserRefreshToken(refreshToken: string, userId: number) {
+  async validateUserRefreshToken(refreshToken: string, userId: string) {
     try {
       console.log('userId: ', userId);
-      const user = this.userService.findById(userId);
+      const user = this.userService.findById(parseInt(userId));
       if (!user) throw new UnauthorizedException('User not found!');
-      //   const authenticated = await compare(refreshToken, user.refresh_token);
-      const authenticated = refreshToken === user.refresh_token;
+      const userRefreshToken = await this.cacheManager.get(userId);
+      if (!userRefreshToken)
+        throw new UnauthorizedException('Refresh token not found!');
+      const authenticated = await compare(
+        refreshToken,
+        userRefreshToken as string,
+      );
       if (!authenticated)
         throw new UnauthorizedException('Refresh token not found!');
       return user;
@@ -41,7 +48,7 @@ export class AuthService {
     }
   }
 
-  login(user: any) {
+  async login(user: any) {
     const payload = { username: user.username, sub: user.userId };
     const access_token = this.jwtService.sign(payload, {
       secret: this.configService.getOrThrow('JWT_ACCESS_TOKEN_SECRET'),
@@ -49,8 +56,9 @@ export class AuthService {
     });
     const refresh_token = this.jwtService.sign(payload, {
       secret: this.configService.getOrThrow('JWT_REFRESH_TOKEN_SECRET'),
-      expiresIn: '7d',
+      expiresIn: `${this.configService.getOrThrow('JWT_REFRESH_TOKEN_EXPIRATION_MS')}ms`,
     });
+    await this.cacheManager.set(user.userId, await hash(refresh_token, 10));
     console.log(
       'updated user: ',
       this.userService.updateUser({ ...user, refresh_token }),
